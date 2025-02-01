@@ -1,0 +1,45 @@
+gold
+\U0001F4B0
+
+black gold
+\U0001F48E
+
+mace
+\U0001F528
+
+dagger
+\U0001F52A
+
+
+magic wand
+\U0001F9F9
+
+arrow
+\U0001F3F9
+
+sword
+\U0001FA93
+
+health spell
+\U0001FA79
+
+speed spell
+\U000026A1
+
+damage spell
+\U0001F4A5
+
+normal food
+\U0001F35E
+
+fine food
+\U0001F356
+
+magic food
+\U0001F347
+
+corrupted food
+\U0001F9A0
+
+treasure
+\U0001F3C6
