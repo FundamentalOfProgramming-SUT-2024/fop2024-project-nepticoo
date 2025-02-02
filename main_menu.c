@@ -109,12 +109,12 @@ int check_username_existence(char* entered_username) {
 int check_password_username(char* entered_username, char* entered_password) {
     char path[2 * M] = "./users/";
     strcat(path, entered_username);
-    strcat(path, "/password.txt");
-    FILE* password_file = fopen(path, "r");
-    char password[M];
-    fscanf(password_file, "%s", password);
-    fclose(password_file);
-    if(!strcmp(password, entered_password))
+    strcat(path, "/user.dat");
+    FILE* user_file = fopen(path, "rb");
+    fread(&user, sizeof(USER), 1, user_file);
+    fclose(user_file);
+    
+    if(!strcmp(user.password, entered_password))
         return 1;
     else
         return 0;
@@ -391,7 +391,6 @@ int sign_up_menu() {
                 attroff(COLOR_PAIR(103));
                 refresh();
                 create_user_files(entered_username, entered_email, entered_password);
-                get_user_info(entered_username);
                 curs_set(false);
                 noecho();
                 napms(2500);
@@ -471,9 +470,9 @@ int get_user_info(char* entered_username) {
     }
     char path[2 * M] = "./users/";
     strcat(path, entered_username);
-    strcat(path, "/user.dat");
+    strcat(path, "/user_s.dat");
     FILE* user_file = fopen(path, "rb");
-    fread(&user, sizeof(USER), 1, user_file);
+    fread(&user_s, sizeof(USER_S), 1, user_file);
     fclose(user_file);
     return 0;
 }

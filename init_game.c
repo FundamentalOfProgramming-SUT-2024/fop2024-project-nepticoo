@@ -512,6 +512,7 @@ int set_treasure_room() {
             user.levels[4].which_room[i][j] = -1;
             user.levels[4].visited[i][j] = 0;
             user.levels[4].items[i][j] = 0;
+            user.levels[4].enemies[i][j] = 0;
             user.levels[4].base[i][j] = ' ';
             user.levels[4].trown[i][j].existence = 0;
             user.levels[4].trown[i][j].count[0] = 0;
@@ -632,7 +633,6 @@ int set_treasure_room() {
         user.levels[4].rooms[r].enemies[count].type = randomx;
         user.levels[4].rooms[r].enemies[count].last_seen = 0;
         user.levels[4].rooms[r].enemies_count += 1;
-
     }
 }
 

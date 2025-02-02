@@ -7,7 +7,7 @@ int pre_procces();
 #include "main_menu.c"
 #include "pre_game_menu.c" 
 #include "init_game.c" 
-#include "play_game.c" 
+#include "play_game.c"
  
 int win_game();
 int lose_game(); 
@@ -45,6 +45,7 @@ int main(){
                 lose_game();
             }
             else if(game_stat == 2) {
+                user.has_load = 1;
                 save_game();
             }
         }
@@ -82,7 +83,7 @@ int pre_procces() {
     init_pair(104, COLOR_MAGENTA, COLOR_BLACK);
     init_pair(105, COLOR_RED, COLOR_BLACK);
     init_pair(106, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(107, COLOR_WHITE, COLOR_BLACK);
+    init_pair(107, COLOR_WHITE, COLOR_BLACK); 
 
     // 8 = orange
     init_color(8, 996, 500, 0);
@@ -141,13 +142,13 @@ int win_game() {
     if(!user.is_guest) {
         char path[2 * M] = "./users/";
         strcat(path, user.username);
-        strcat(path, "user_s.dat");
+        strcat(path, "/user_s.dat");
         FILE* user_s_file = fopen(path, "wb");
         fwrite(&user_s, sizeof(USER_S), 1, user_s_file);
         fclose(user_s_file);
     }
 }
- 
+
 int lose_game() {
     const char *ascii_art[] = {
     "  ____    _    __  __ _____    _____     _______ ____    _   _   _ ",
@@ -189,4 +190,4 @@ int save_game() {
     fclose(user_file);
     return 0;
     
-}
+} 

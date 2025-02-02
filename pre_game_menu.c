@@ -382,7 +382,7 @@ int profile_menu() {
             attroff(COLOR_PAIR(color_of_code[user.theme_code]));
         }
     }
-    char options[11][M] = {{"Username:"}, {"Password:"}, {"Email:"}, {"Points:"}, {"Saved Golds:"}, {"Finished Games:"}, {"EXP:"}, {"Current HP:"}, {"Current Golds:"}, {"Theme Color:"}, {"Difficulty Level:"}};
+    char options[11][M] = {{"Username:"}, {"Email:"}, {"Password:"}, {"Points:"}, {"Saved Golds:"}, {"Finished Games:"}, {"EXP:"}, {"Current HP:"}, {"Current Golds:"}, {"Theme Color:"}, {"Difficulty Level:"}};
     for(int i = 0; i < 11; i++) {
         attron(COLOR_PAIR(106));
         if(i % 2 == 0)

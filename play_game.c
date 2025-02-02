@@ -668,6 +668,23 @@ int apply_attack() {
             }
             yp += dy;
             xp += dx;
+            if(user.levels[l].rooms[user.levels[l].which_room[yp][xp]].type == 1) {
+                attron(COLOR_PAIR(103));
+            }
+            if(user.levels[l].rooms[user.levels[l].which_room[yp][xp]].type == 2) {
+                attron(COLOR_PAIR(109));
+            }
+            mvprintw(yp, xp, "\u27B6");
+            if(yp - dy != user.pos.y || xp - dx != user.pos.x) {
+                mvprintw(yp - dy, xp - dx, ".");
+            }
+            if(user.levels[l].rooms[user.levels[l].which_room[yp][xp]].type == 1) {
+                attroff(COLOR_PAIR(103));
+            }
+            if(user.levels[l].rooms[user.levels[l].which_room[yp][xp]].type == 2) {
+                attroff(COLOR_PAIR(109));
+            }
+            refresh();
             if(user.levels[l].enemies[yp][xp] != 0) {
                 fail = 0;
                 for(int k = 0; k < user.levels[l].rooms[r].enemies_count; k++) {
@@ -690,6 +707,7 @@ int apply_attack() {
                 }
                 break;
             }
+            napms(50);
         }
         if(fail) {
             char message[150];
@@ -876,12 +894,14 @@ int food_menu() {
         if(c == KEY_ENT) {
             if(user.foods[selected].type == 3) {
                 user.health -= 10;
-                user.hunger += 10;
+                user.hunger += 30;
+                if(user.hunger > default_hunger)
+                    user.hunger = default_hunger;
                 strcpy(messages_log[messages_count++], "Sorry, Your food was corrupted!");
             }
             else {
                 user.health += 10;
-                user.hunger += 20;
+                user.hunger += 40;
                 if(user.health > default_health[user.difficulty])
                     user.health = default_health[user.difficulty];
                 if(user.hunger > default_hunger)

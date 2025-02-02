@@ -18,7 +18,7 @@ arrow
 \U0001F3F9
 
 sword
-\U0001FA93
+\U00002694
 
 health spell
 \U0001FA79
