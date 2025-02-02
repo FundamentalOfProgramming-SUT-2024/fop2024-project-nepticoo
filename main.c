@@ -5,16 +5,22 @@ USER_S user_s;
 
 int pre_procces();
 #include "main_menu.c"
-#include "pre_game_menu.c"
-#include "init_game.c"
-#include "play_game.c"
-
+#include "pre_game_menu.c" 
+#include "init_game.c" 
+#include "play_game.c" 
+ 
 int win_game();
 int lose_game(); 
 int save_game();
 
 int main(){
     pre_procces(); 
+    if(LINES < 35 || COLS < 120) {
+        endwin();
+        printf("Please open a larger terminal window (minimum 35 rows and 120 columns) to play the game\n");
+        printf("you can zoom out using ctrl + -\n");
+        return 1;
+    }
     while(1) {
         if(main_menu()) {
             endwin();
@@ -29,7 +35,7 @@ int main(){
                 initialize_load_game();
             }
             else {
-                break;
+                break; 
             }
             int game_stat = play_game();
             if(game_stat == 0) {
@@ -47,8 +53,8 @@ int main(){
     getch();
     endwin();
     return 0;
-}
-
+} 
+ 
 int pre_procces() {
     srand(time(NULL));
     setlocale(LC_ALL, "");
@@ -97,7 +103,7 @@ int pre_procces() {
 
 int win_game() {
     int golds = user.golds;
-    int points = (golds + (5 * user.health) + 500) * user.difficulty;
+    int points = (golds + (5 * user.health) + 500) * (user.difficulty + 1);
     const char *ascii_art[] = {
         "__   _____  _   _  __        _____ _   _   _   _   _ ",
         "\\ \\ / / _ \\| | | | \\ \\      / /_ _| \\ | | | | | | | |",
@@ -141,7 +147,7 @@ int win_game() {
         fclose(user_s_file);
     }
 }
-
+ 
 int lose_game() {
     const char *ascii_art[] = {
     "  ____    _    __  __ _____    _____     _______ ____    _   _   _ ",
@@ -182,4 +188,5 @@ int save_game() {
     fwrite(&user, sizeof(USER), 1, user_file);
     fclose(user_file);
     return 0;
+    
 }

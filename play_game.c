@@ -11,6 +11,7 @@ int handle_movement(int c);
 int is_move_key(int c);
 int is_special_key(int c);
 int pick_up_item();
+int apply_attack();
 int move_enemies();
 int update_visited(int l, int y, int x);
 int update_hunger();
@@ -58,7 +59,21 @@ int play_game() {
         }
         else if(move_type == 1) {
             // attack !!!
-            continue;
+            if(apply_attack() == -1) {
+                continue;
+            }
+
+            int speed_spell_passed = user.timer - user.spells[1].last_time;
+            if(speed_spell_passed >= 10 || speed_spell_passed % 2 == 1)
+                move_enemies();
+            update_hunger();
+            update_health();
+            update_food();
+            if(user.health <= 0) {
+                return 1;
+            }
+
+            user.timer++;
         }
         else if(move_type == 2) {
             continue;
@@ -208,7 +223,7 @@ int print_map() {
                         }
                         case(16): {
                             // sword
-                            mvprintw(i, j, "\U0001FA93");
+                            mvprintw(i, j, "\U00002694");
                             break;
                         }
                         case(20): {
@@ -259,12 +274,47 @@ int print_map() {
     // print trown_weapoan
     for(int i = 0; i < LINES; i++) {
         for(int j = 0; j < COLS; j++) {
-            if(user.levels[l].trown[i][j].existence == 1) {
-                mvprintw(i, j, "\u27B6");
+            if(user.levels[l].which_room[i][j] != -1 && user.levels[l].rooms[user.levels[l].which_room[i][j]].visited == 1) {
+                if(user.levels[l].trown[i][j].existence == 1) {
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 1) {
+                        attron(COLOR_PAIR(103));
+                    }
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2) {
+                        attron(COLOR_PAIR(109));
+                    }
+                    mvprintw(i, j, "\u27B6");
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 1) {
+                        attroff(COLOR_PAIR(103));
+                    }
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2) {
+                        attroff(COLOR_PAIR(109));
+                    }
+                }
             }
         }
     }
     // print enemies
+    for(int i = 0; i < LINES; i++) {
+        for(int j = 0; j < COLS; j++) {
+            if(user.levels[l].which_room[i][j] != -1 && user.levels[l].rooms[user.levels[l].which_room[i][j]].visited == 1) {
+                if(user.levels[l].enemies[i][j] != 0) {
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 1) {
+                        attron(COLOR_PAIR(103));
+                    }
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2) {
+                        attron(COLOR_PAIR(109));
+                    }
+                    mvprintw(i, j, "%c", user.levels[l].enemies[i][j]);
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 1) {
+                        attroff(COLOR_PAIR(103));
+                    }
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2) {
+                        attroff(COLOR_PAIR(109));
+                    }
+                }
+            }
+        }
+    }
     
     // print user
     attron(COLOR_PAIR(color_of_code[user.theme_code]));
@@ -335,9 +385,11 @@ int show_messages() {
             printw("MORE");
             attroff(A_DIM | A_REVERSE);
         }
+        refresh();
         int c = getch();
         for(int j = 0; j < 100; j++)
             mvprintw(1, j, " ");
+        refresh();
         if(c == KEY_ENT) {
             break;
         }
@@ -548,8 +600,161 @@ int pick_up_item() {
     }
 }
 
+int apply_attack() {
+    int wep = user.selected_weapoan;
+    int l = user.current_level, y = user.pos.y, x = user.pos.x;
+    int r = user.levels[l].which_room[y][x];
+    int damage = user.weapoans[wep].damage;
+    int damage_spell_passed = user.timer - user.spells[2].last_time;
+    if(damage_spell_passed < 10)
+        damage *= 2;
+    if(r == -1) 
+        return -1;
+    if(wep == 0 || wep == 4) {
+        for(int i = y-1; i <= y+1; i++) {
+            for(int j = x-1; j <= x+1; j++) {
+                if(user.levels[l].enemies[i][j] != 0) {
+                    for(int k = 0; k < user.levels[l].rooms[r].enemies_count; k++) {
+                        if(user.levels[l].rooms[r].enemies[k].type != -1 && user.levels[l].rooms[r].enemies[k].pos.y == i && user.levels[l].rooms[r].enemies[k].pos.x == j) {
+                            user.levels[l].rooms[r].enemies[k].health -= damage;
+                            user.levels[l].rooms[r].enemies[k].last_seen = user.timer;
+                            if(user.levels[l].rooms[r].enemies[k].health <= 0) {
+                                char message[150];
+                                sprintf(message, "You killed a %s with your %s!", enemies_names[user.levels[l].rooms[r].enemies[k].type], weapoan_names[wep]);
+                                strcpy(messages_log[messages_count++], message);
+                                user.levels[l].rooms[r].enemies[k].type = -1;
+                                user.levels[l].enemies[i][j] = 0;
+                            }
+                            else {
+                                char message[150];
+                                sprintf(message, "You hit a %s with your %s! (%d)", enemies_names[user.levels[l].rooms[r].enemies[k].type], weapoan_names[wep], damage);
+                                strcpy(messages_log[messages_count++], message);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else {
+        mvprintw(1, 4, "Choose a direction to attack:");
+        refresh();
+        int c = getch();
+        if(!is_move_key(c))
+            return -1;
+        int dir;
+        if(c == 'y' || c == 'Y')
+            dir = 0;
+        else if(c == 'j' || c == 'J')
+            dir = 1;
+        else if(c == 'u' || c == 'U')
+            dir = 2;
+        else if(c == 'h' || c == 'H')
+            dir = 3;
+        else if(c == 'l' || c == 'L')
+            dir = 5;
+        else if(c == 'b' || c == 'B')
+            dir = 6;
+        else if(c == 'k' || c == 'K')
+            dir = 7;
+        else if(c == 'n' || c == 'N')
+            dir = 8;
+        int dy = (dir / 3) - 1;
+        int dx = (dir % 3) - 1;
+        int yp = y, xp = x, fail = 1;
+        for(int i = 0; i < user.weapoans[wep].range; i++) {
+            if(user.levels[l].base[yp + dy][xp + dx] != '.' || user.levels[l].items[yp + dy][xp + dx] != 0) {
+                break;
+            }
+            yp += dy;
+            xp += dx;
+            if(user.levels[l].enemies[yp][xp] != 0) {
+                fail = 0;
+                for(int k = 0; k < user.levels[l].rooms[r].enemies_count; k++) {
+                    if(user.levels[l].rooms[r].enemies[k].type != -1 && user.levels[l].rooms[r].enemies[k].pos.y == yp && user.levels[l].rooms[r].enemies[k].pos.x == xp) {
+                        user.levels[l].rooms[r].enemies[k].health -= damage;
+                        user.levels[l].rooms[r].enemies[k].last_seen = user.timer;
+                        if(user.levels[l].rooms[r].enemies[k].health <= 0) {
+                            char message[150];
+                            sprintf(message, "You killed a %s with your %s!", enemies_names[user.levels[l].rooms[r].enemies[k].type], weapoan_names[wep]);
+                            strcpy(messages_log[messages_count++], message);
+                            user.levels[l].rooms[r].enemies[k].type = -1;
+                            user.levels[l].enemies[yp][xp] = 0;
+                        }
+                        else {
+                            char message[150];
+                            sprintf(message, "You hit a %s with your %s! (%d)", enemies_names[user.levels[l].rooms[r].enemies[k].type], weapoan_names[wep], damage);
+                            strcpy(messages_log[messages_count++], message);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        if(fail) {
+            char message[150];
+            sprintf(message, "You missed a shot with your %s!", weapoan_names[wep]);
+            strcpy(messages_log[messages_count++], message);
+            user.levels[l].trown[yp][xp].count[wep - 1] += 1;
+            user.levels[l].trown[yp][xp].existence = 1;
+        }
+        user.weapoans[wep].count -= 1;
+        if(user.weapoans[wep].count == 0) {
+            strcat(messages_log[messages_count++], "Your out of ammo!");
+            user.selected_weapoan = 0;
+        }
+    }
+}
+
 int move_enemies() {
-    // phase 2
+    int l = user.current_level, y = user.pos.y, x = user.pos.x;
+    int r = user.levels[l].which_room[y][x];
+    if(r == -1)
+        return 1;
+    for(int i = 0; i < user.levels[l].rooms[r].enemies_count; i++) { 
+        if(user.levels[l].rooms[r].enemies[i].type != -1) {
+            if((user.levels[l].rooms[r].enemies[i].type == 2 || user.levels[l].rooms[r].enemies[i].type == 4) && user.timer - user.levels[l].rooms[r].enemies[i].last_seen >= 5) {
+                continue;
+            }
+            int yn = user.levels[l].rooms[r].enemies[i].pos.y, xn = user.levels[l].rooms[r].enemies[i].pos.x;
+            if(abs(yn - y) <= 1 && abs(xn - x) <= 1) {
+                int attack_damage = user.levels[l].rooms[r].enemies[i].damage + (2 * user.difficulty) + (1 - rand() % 3);
+                user.health -= attack_damage;
+                user.levels[l].rooms[r].enemies[i].last_seen = user.timer;
+                char message[150];
+                snprintf(message, sizeof(message), "A %s attacked you! (%d)", enemies_names[user.levels[l].rooms[r].enemies[i].type], attack_damage);
+                strcpy(messages_log[messages_count++], message);
+            }
+            else {
+                POSITION next;
+                int min_dis = 100000;
+                for(int yp = yn - 1; yp <= yn + 1; yp++) {
+                    for(int xp = xn - 1; xp <= xn + 1; xp++) {
+                        if(user.levels[l].base[yp][xp] == '.' && user.levels[l].items[yp][xp] == 0
+                        && user.levels[l].enemies[yp][xp] == 0 && user.levels[l].trown[yp][xp].existence == 0
+                        && (yp != y || xp != x)) {
+                            int dis = abs(yp - y) + abs(xp - x);
+                            if(dis < min_dis || (dis == min_dis && (rand() % 2 == 0))) {
+                                next.y = yp;
+                                next.x = xp;
+                                min_dis = dis;
+                            }
+                        }
+
+                    }
+                }
+                if(min_dis == 100000) {
+                    return 0;
+                }
+                user.levels[l].enemies[yn][xn] = 0;
+                user.levels[l].enemies[next.y][next.x] = user.levels[l].rooms[r].enemies[i].symbol;
+                user.levels[l].rooms[r].enemies[i].pos.y = next.y;
+                user.levels[l].rooms[r].enemies[i].pos.x = next.x;
+            }
+            
+
+        }
+    }
 }
 
 int update_visited(int l, int y, int x) {
@@ -677,6 +882,10 @@ int food_menu() {
             else {
                 user.health += 10;
                 user.hunger += 20;
+                if(user.health > default_health[user.difficulty])
+                    user.health = default_health[user.difficulty];
+                if(user.hunger > default_hunger)
+                    user.hunger = default_hunger;
                 if(user.foods[selected].type == 1)
                     user.spells[2].last_time = user.timer;
                 else if(user.foods[selected].type == 2)
@@ -689,6 +898,7 @@ int food_menu() {
             user.foods[selected].collect_time = user.foods[user.foods_count - 1].collect_time;
             user.foods[user.foods_count - 1].type = -1;
             user.foods_count--;
+            user.last_meal = user.timer;
             break;
         }
         if(c == KEY_ESC) {

@@ -31,7 +31,8 @@ typedef struct {
     POSITION pos;
     char symbol;
     int type;
-    int health; 
+    int damage, health;
+    int last_seen;
 } ENEMY;
 
 typedef struct {
@@ -109,12 +110,12 @@ int default_health[3] = {80, 60, 40};
 int default_hunger = 100;
 int color_of_code[3] = {107, 102, 104};
 char name_of_code[3][M] = {{"WHITE"}, {"CYAN"}, {"MAGENTA"}};
-char weapoan_names[5][M] = {{"Mace\U0001F528"}, {"Dagger\U0001F52A"}, {"Magic Wand\U0001F9F9"}, {"Arrow\U0001F3F9"}, {"Sword\U0001FA93"}};
+char weapoan_names[5][M] = {{"Mace\U0001F528"}, {"Dagger\U0001F52A"}, {"Magic Wand\U0001F9F9"}, {"Arrow\U0001F3F9"}, {"Sword\U00002694"}};
 char spell_names[3][M] = {{"Health\U0001FA79"}, {"Speed\U000026A1"}, {"Damage\U0001F4A5"}};
 char food_names[4][M] = {{"Normal Food\U0001F35E"}, {"Fine Food\U0001F356"}, {"Magic Food\U0001F347"}, {"Corrupted Food\U0001F9A0"}};
 char enemies_names[5][M] = {{"Daemon"}, {"Fire Breath"}, {"Giant"}, {"Snake"}, {"Undead"}};
 POSITION random_position;
 int not_sword;
-char messages_log[20][100], messages_count;
+char messages_log[M][150], messages_count;
 
 #endif
