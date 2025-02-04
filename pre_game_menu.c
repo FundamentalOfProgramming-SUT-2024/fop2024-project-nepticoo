@@ -261,7 +261,7 @@ int difficulty_menu() {
 }
 
 int music_menu() {
-    int selected = user.music_stat;
+    int selected = user.music_stat_normal;
     char options[4][M] = {{"TURN OFF"}, {"PLAY MUSIC1"}, {"PLAY MUSIC2"}, {"EXIT"}};
     while(1) {
         clear();
@@ -298,26 +298,21 @@ int music_menu() {
         if(c == KEY_ENT) {
             if(selected == 0) {
                 char path_prev[M];
-                if(user.music_stat == 1)
-                    strcpy(path_prev, "music1.mp3");
-                else
-                    strcpy(path_prev, "music2.mp3");
+                snprintf(path_prev, sizeof(path_prev), "music%d.mp3", user.music_stat);
                 Mix_Music *music = Mix_LoadMUS(path_prev);
                 Mix_HaltMusic();
                 Mix_FreeMusic(music);
                 Mix_CloseAudio();
                 SDL_Quit();
                 user.music_stat = selected;
+                user.music_stat_normal = selected;
             }
             else if(selected == 1 || selected == 2) {
                 if(user.music_stat == selected)
                     return 0;
                 if(user.music_stat > 0) {
                     char path_prev[M];
-                    if(user.music_stat == 1)
-                        strcpy(path_prev, "music1.mp3");
-                    else
-                        strcpy(path_prev, "music2.mp3");
+                    snprintf(path_prev, sizeof(path_prev), "music%d.mp3", user.music_stat);
                     Mix_Music *music = Mix_LoadMUS(path_prev);
                     Mix_HaltMusic();
                     Mix_FreeMusic(music);
@@ -328,13 +323,11 @@ int music_menu() {
                 SDL_Init(SDL_INIT_AUDIO);
                 Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096);
                 char path[M];
-                if(selected == 1)
-                    strcpy(path, "music1.mp3");
-                else
-                    strcpy(path, "music2.mp3");
+                snprintf(path, sizeof(path), "music%d.mp3", selected);
                 Mix_Music *music = Mix_LoadMUS(path);
                 Mix_PlayMusic(music, -1);
                 user.music_stat = selected;
+                user.music_stat_normal = selected;
             }
             return 0;
         }

@@ -17,6 +17,7 @@ int update_visited(int l, int y, int x);
 int update_hunger();
 int update_health();
 int update_food();
+int update_music(int room_type);
 int food_menu();
 int weopoan_menu();
 int spell_menu();
@@ -40,8 +41,9 @@ int play_game() {
         }
         else if(move_type == 0) {
             update_visited(user.current_level, user.pos.y, user.pos.x);
-
-            if(!g_pressed)
+            int r = user.levels[user.current_level].which_room[user.pos.y][user.pos.x];
+            update_music(user.levels[user.current_level].rooms[r].type);
+            if(!g_pressed && !(r != -1 && user.levels[user.current_level].rooms[r].type == 3))
                 pick_up_item();
             g_pressed = 0;
 
@@ -107,6 +109,8 @@ int print_map() {
                 attron(COLOR_PAIR(103));
             if(user.levels[l].which_room[i][j] != -1 && user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2)
                 attron(COLOR_PAIR(109));
+            if(user.levels[l].which_room[i][j] != -1 && user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 3)
+                attron(COLOR_PAIR(101));
             if(user.levels[l].has_enchant_room && user.levels[l].secret_doors[0].y == i && user.levels[l].secret_doors[0].x == j && user.levels[l].visited[user.levels[l].secret_doors[1].y][user.levels[l].secret_doors[1].x] == 0)
                 attron(A_BLINK);
             if(base == ' ') {
@@ -148,6 +152,10 @@ int print_map() {
                 
             }
             else if(base == '.' || base == '|' || base == '-' || base == 'O' || base == '>' || base == '<') {
+                if(base == '.' && user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 3) {
+                    if(abs(user.pos.y - i) > 2 || abs(user.pos.x - j) > 2)
+                        continue;
+                }
                 if(visit_room == 1)
                     mvprintw(i, j, "%c", base);
                 else
@@ -184,6 +192,8 @@ int print_map() {
                 attroff(COLOR_PAIR(103));
             if(user.levels[l].which_room[i][j] != -1 && user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2)
                 attroff(COLOR_PAIR(109));
+            if(user.levels[l].which_room[i][j] != -1 && user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 3)
+                attroff(COLOR_PAIR(101));
             if(user.levels[l].has_enchant_room && user.levels[l].secret_doors[0].y == i && user.levels[l].secret_doors[0].x == j && user.levels[l].visited[user.levels[l].secret_doors[1].y][user.levels[l].secret_doors[1].x] == 0)
                 attroff(A_BLINK);
         }   
@@ -194,6 +204,10 @@ int print_map() {
         for(int j = 0; j < COLS; j++) {
             if(user.levels[l].which_room[i][j] != -1 && user.levels[l].rooms[user.levels[l].which_room[i][j]].visited == 1) {
                 if(user.levels[l].items[i][j] != 0) {
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 3) {
+                        if(abs(user.pos.y - i) > 2 || abs(user.pos.x - j) > 2)
+                            continue;
+                    }
                     switch(user.levels[l].items[i][j]) {
                         case(2): {
                             // gold
@@ -282,6 +296,11 @@ int print_map() {
                     if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2) {
                         attron(COLOR_PAIR(109));
                     }
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 3) {
+                        if(abs(user.pos.y - i) > 2 || abs(user.pos.x - j) > 2)
+                            continue;
+                        attron(COLOR_PAIR(101));
+                    }
                     mvprintw(i, j, "\u27B6");
                     if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 1) {
                         attroff(COLOR_PAIR(103));
@@ -289,6 +308,8 @@ int print_map() {
                     if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2) {
                         attroff(COLOR_PAIR(109));
                     }
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 3)
+                        attroff(COLOR_PAIR(101));
                 }
             }
         }
@@ -304,6 +325,11 @@ int print_map() {
                     if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2) {
                         attron(COLOR_PAIR(109));
                     }
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 3) {
+                        if(abs(user.pos.y - i) > 2 || abs(user.pos.x - j) > 2)
+                            continue;
+                        attron(COLOR_PAIR(101));
+                    }
                     mvprintw(i, j, "%c", user.levels[l].enemies[i][j]);
                     if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 1) {
                         attroff(COLOR_PAIR(103));
@@ -311,6 +337,8 @@ int print_map() {
                     if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 2) {
                         attroff(COLOR_PAIR(109));
                     }
+                    if(user.levels[l].rooms[user.levels[l].which_room[i][j]].type == 3)
+                        attroff(COLOR_PAIR(101));
                 }
             }
         }
@@ -835,6 +863,36 @@ int update_food() {
                 user.foods[i].collect_time = user.timer;
             }
         }
+    }
+}
+
+int update_music(int room_type) {
+    int music_num;
+    if(room_type == 0)
+        music_num = user.music_stat_normal;
+    else if(room_type == 1)
+        music_num = 3;
+    else if(room_type == 2)
+        music_num = 4;
+    else if(room_type == 3)
+        music_num = 5;
+    if(user.music_stat != music_num) { 
+        char path_prev[M];
+        snprintf(path_prev, sizeof(path_prev), "music%d.mp3", user.music_stat);
+        Mix_Music *music = Mix_LoadMUS(path_prev);
+        Mix_HaltMusic();
+        Mix_FreeMusic(music);
+        Mix_CloseAudio();
+        SDL_Quit();
+        if(music_num != 0) {
+            SDL_Init(SDL_INIT_AUDIO);
+            Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096);
+            char path[M];
+            snprintf(path, sizeof(path), "music%d.mp3", music_num);
+            Mix_Music *music = Mix_LoadMUS(path);
+            Mix_PlayMusic(music, -1);
+        }
+        user.music_stat = music_num;
     }
 }
 

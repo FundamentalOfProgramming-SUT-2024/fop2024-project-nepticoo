@@ -19,7 +19,8 @@ int set_spells(int l);
 int set_foods(int l);
 int set_enenmies(int l);
 int set_doors(int l);
-int set_enchant_room();
+int set_enchant_room(int l);
+int set_nightmare_room(int l);
 int set_treasure_room();
 int connect_doors(int l, int r1, int r2, int type);
 int initialize_load_game();
@@ -409,8 +410,7 @@ int is_valid_wall(int l, int i, int j) {
     return 1;
 }
 
-int set_enchant_room() {
-    int l = rand() % 3;
+int set_enchant_room(int l) {
     user.levels[l].has_enchant_room = 1;
     int h = 6 + (rand() % (LINES - 25));
     int w = 6 + (rand() % 3);
@@ -502,6 +502,154 @@ int set_enchant_room() {
         user.levels[l].items[random_position.y][random_position.x] = 20 + (2 * number);
         user.levels[l].items[random_position.y][random_position.x + 1] = 21 + (2 * number);
     }
+}
+
+int set_nightmare_room(int l) {
+    user.levels[l].has_enchant_room = 1;
+    int h = 10 + (rand() % (LINES - 29));
+    int w = 6 + (rand() % 3);
+    int y = 3 + (rand() % (LINES - 15 - h));
+    int x = COLS - 15 + (rand() % 3);
+
+    user.levels[l].rooms[6].visited = 0;
+    user.levels[l].rooms[6].type = 3;
+
+    user.levels[l].rooms[6].h = h;
+    user.levels[l].rooms[6].w = w;
+
+    user.levels[l].rooms[6].corners[0].y = y;
+    user.levels[l].rooms[6].corners[0].x = x;
+
+    user.levels[l].rooms[6].corners[1].y = y;
+    user.levels[l].rooms[6].corners[1].x = x + w;
+
+    user.levels[l].rooms[6].corners[2].y = y + h;
+    user.levels[l].rooms[6].corners[2].x = x + w;
+
+    user.levels[l].rooms[6].corners[3].y = y + h;
+    user.levels[l].rooms[6].corners[3].x = x;
+
+    for(int i = y; i <= y + h; i++) {
+        for(int j = x; j <= x + w; j++) {
+            user.levels[l].which_room[i][j] = 6;
+            if(i == y || i == y + h)
+                user.levels[l].base[i][j] = '-';
+            else if(j == x || j == x + w)
+                user.levels[l].base[i][j] = '|';
+            else
+                user.levels[l].base[i][j] = '.';
+        }
+    }
+
+    int door_side = rand() % 4;
+    if(door_side == 0) {
+        int r = rand() % (w - 2);
+        user.levels[l].base[y][x + 1 + r] = '?';
+        user.levels[l].rooms[6].doors[0].y = y;
+        user.levels[l].rooms[6].doors[0].x = x + 1 + r;
+        user.levels[l].secret_doors[1].y = y;
+        user.levels[l].secret_doors[1].x = x + 1 + r;
+    }
+    if(door_side == 1) {
+        int r = rand() % (h - 2);
+        user.levels[l].base[y + 1 + r][x + w] = '?';
+        user.levels[l].rooms[6].doors[1].y = y + 1 + r;
+        user.levels[l].rooms[6].doors[1].x = x + w;
+        user.levels[l].secret_doors[1].y = y + 1 + r;
+        user.levels[l].secret_doors[1].x = x + w;
+    }
+    if(door_side == 2) {
+        int r = rand() % (w - 2);
+        user.levels[l].base[y + h][x + 1 + r] = '?';
+        user.levels[l].rooms[6].doors[2].y = y + h;
+        user.levels[l].rooms[6].doors[2].x = x + 1 + r;
+        user.levels[l].secret_doors[1].y = y + h;
+        user.levels[l].secret_doors[1].x = x + 1 + r;
+    }
+    if(door_side == 3) {
+        int r = rand() % (h - 2);
+        user.levels[l].base[y + 1 + r][x] = '?';
+        user.levels[l].rooms[6].doors[3].y = y + 1 + r;
+        user.levels[l].rooms[6].doors[3].x = x;
+        user.levels[l].secret_doors[1].y = y + 1 + r;
+        user.levels[l].secret_doors[1].x = x;
+    }
+    POSITION* all_empty = (POSITION*) malloc((N * N) * sizeof(POSITION));
+    int n = 0;
+    for(int i = 0; i < LINES; i++)
+        for(int j = 0; j < COLS; j++)
+            if(is_valid_wall(l, i, j)) {
+                all_empty[n].y = i;
+                all_empty[n].x = j;
+                n++;
+            }
+    int it = rand() % n;
+    user.levels[l].base[all_empty[it].y][all_empty[it].x] = '?';
+    user.levels[l].secret_doors[0].y = all_empty[it].y;
+    user.levels[l].secret_doors[0].x = all_empty[it].x;
+    free(all_empty);
+
+    n = 1 + (rand() % 2);
+    for(int i = 0; i < n; i++) {
+        find_random_empty(l, 3, 1, -1);
+        if(!(rand() % 5)) {
+            user.levels[l].items[random_position.y][random_position.x] = 4;
+            user.levels[l].items[random_position.y][random_position.x + 1] = 5;
+        }
+        else {
+            user.levels[l].items[random_position.y][random_position.x] = 2;
+            user.levels[l].items[random_position.y][random_position.x + 1] = 3;
+        }
+    }
+    n = ((w-2) * (h-2)) / 5 + 3  - (rand() % 5);
+    for(int i = 0; i < n; i++) {
+        find_random_empty(l, 3, 0, -1);
+        int randomx = rand() % 5;
+        int r = user.levels[l].which_room[random_position.y][random_position.x];
+        int count = user.levels[l].rooms[r].enemies_count;
+        if(randomx == 0) {
+            user.levels[l].enemies[random_position.y][random_position.x] = 'D';
+            user.levels[l].rooms[r].enemies[count].symbol = 'D';
+            user.levels[l].rooms[r].enemies[count].type = 0;
+            user.levels[l].rooms[r].enemies[count].health = 5;
+            user.levels[l].rooms[r].enemies[count].damage = 4;
+        }
+        else if(randomx == 1) {
+            user.levels[l].enemies[random_position.y][random_position.x] = 'F';
+            user.levels[l].rooms[r].enemies[count].symbol = 'F';
+            user.levels[l].rooms[r].enemies[count].type = 1;
+            user.levels[l].rooms[r].enemies[count].health = 10;
+            user.levels[l].rooms[r].enemies[count].damage = 7;
+        }
+        else if(randomx == 2) {
+            user.levels[l].enemies[random_position.y][random_position.x] = 'G';
+            user.levels[l].rooms[r].enemies[count].symbol = 'G';
+            user.levels[l].rooms[r].enemies[count].type = 2;
+            user.levels[l].rooms[r].enemies[count].health = 15;
+            user.levels[l].rooms[r].enemies[count].damage = 7;
+        }
+        else if(randomx == 3) {
+            user.levels[l].enemies[random_position.y][random_position.x] = 'S';
+            user.levels[l].rooms[r].enemies[count].symbol = 'S';
+            user.levels[l].rooms[r].enemies[count].type = 3;
+            user.levels[l].rooms[r].enemies[count].health = 20;
+            user.levels[l].rooms[r].enemies[count].damage = 11;
+        }
+        else if(randomx == 4) {
+            user.levels[l].enemies[random_position.y][random_position.x] = 'U';
+            user.levels[l].rooms[r].enemies[count].symbol = 'U';
+            user.levels[l].rooms[r].enemies[count].type = 4;
+            user.levels[l].rooms[r].enemies[count].health = 30;
+            user.levels[l].rooms[r].enemies[count].damage = 10;
+        }
+        user.levels[l].rooms[r].enemies[count].pos.y = random_position.y;
+        user.levels[l].rooms[r].enemies[count].pos.x = random_position.x;
+        user.levels[l].rooms[r].enemies[count].type = randomx;
+        user.levels[l].rooms[r].enemies[count].last_seen = -100;
+        user.levels[l].rooms[r].enemies_count += 1;
+
+    }
+
 }
 
 int set_treasure_room() {
@@ -739,7 +887,11 @@ int initialize_new_game() {
     for(int k = 0; k < 4; k++) {
         generate_levels(k);
     }
-    set_enchant_room();
+    int l1 = rand() % 3;
+    int l2 = rand() % 2;
+    if(l2 >= l1) l2++;
+    set_enchant_room(l1);
+    set_nightmare_room(l2);
     set_treasure_room();
     user.pos.y = user.levels[0].spawn.y;
     user.pos.x = user.levels[0].spawn.x;

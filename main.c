@@ -38,6 +38,7 @@ int main(){
                 break; 
             }
             int game_stat = play_game();
+            update_music(0);
             if(game_stat == 0) {
                 win_game();
             }

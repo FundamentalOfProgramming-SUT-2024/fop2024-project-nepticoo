@@ -429,6 +429,7 @@ int create_user_files(char* entered_username, char* entered_email, char* entered
     user.theme_code = 0;
     user.finished_games = 0;
     user.music_stat = 0;
+    user.music_stat_normal = 0;
 
     char path[2 * M] = "./users/";
     strcat(path, entered_username);
@@ -466,6 +467,7 @@ int get_user_info(char* entered_username) {
         user.theme_code = 0;
         user.finished_games = 0;
         user.music_stat = 0;
+        user.music_stat_normal = 0;
         return 0;
     }
     char path[2 * M] = "./users/";

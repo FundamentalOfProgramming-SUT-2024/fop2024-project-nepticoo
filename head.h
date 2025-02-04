@@ -85,7 +85,7 @@ typedef struct {
     time_t first_game_time;
     int theme_code;
     int finished_games;
-    int music_stat;
+    int music_stat, music_stat_normal;
     
     int timer;
     int health, hunger, golds;
