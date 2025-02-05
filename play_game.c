@@ -78,6 +78,8 @@ int play_game() {
             user.timer++;
         }
         else if(move_type == 2) {
+            int r = user.levels[user.current_level].which_room[user.pos.y][user.pos.x];
+            update_music(user.levels[user.current_level].rooms[r].type);
             continue;
         }
         else if(move_type == 3){
